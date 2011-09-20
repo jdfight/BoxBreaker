@@ -20,7 +20,7 @@ bitMouseDown = false
 bonusDropping = false
 
 currentLevel = 1
-maxLevel = 13
+maxLevel = 14
 paused = false
 
 ammo = 0
@@ -550,7 +550,7 @@ function add(a, b, coll)
        if (objects.bricks[a].intHP <= 0) then	
 	  createExplosion("Explosion", objects.bricks[a].body:getX(), objects.bricks[a].body:getY(), impactX, impactY)
 	  if (objects.bricks[a].body:getX() > 0) then
-	     if(math.random(100) > 80 and bonusDropping == false) then
+	     if(math.random(100) > 75 and bonusDropping == false) then
 		bonusDropping = true
 		createBonus(objects.bricks[a].body:getX(), objects.bricks[a].body:getY())
 	     end 
