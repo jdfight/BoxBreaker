@@ -1,0 +1,1 @@
+zip -r ../bin/BoxBreaker.love * && love ../bin/BoxBreaker.love
