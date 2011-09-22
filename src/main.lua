@@ -87,7 +87,7 @@ function love.load()
     
    if love.filesystem.exists("boxSave") == false then
       love.filesystem.newFile("boxSave")
-      love.fileSystem.write("boxSave", tostring(currentLevel))
+      love.filesystem.write("boxSave", tostring(currentLevel))
    else
       for data in love.filesystem.lines("boxSave") do
 	 saveData = data
