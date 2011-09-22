@@ -5,6 +5,7 @@ require "menus"
 screenWidth = 640
 screenHeight = 480
 
+saveData = "1"
 text = "<ESC> Quit,  <Q> Release Mouse, <Space> Launch Ball <S> Toggle Sound"
 
 ballHit = false
@@ -20,7 +21,8 @@ bitMouseDown = false
 bonusDropping = false
 
 currentLevel = 1
-maxLevel = 14
+savedLevel = 1
+maxLevel = 15
 paused = false
 
 ammo = 0
@@ -34,6 +36,8 @@ world = nil
 fireworksCounter = 0
 fireworksTime = 10
 
+fileSave = nil
+
 function resetStats()
    text = "<ESC> Quit,  <Q> Release Mouse, <Space> Launch Ball <S> Toggle Sound"
 
@@ -46,9 +50,18 @@ function resetStats()
 
    bitMouseDown = false
    bonusDropping = false
+   if gameContinue == true then
+     currentLevel = savedLevel
+   else 
+      currentLevel = 1 
+      --local success = love.filesystem.write("boxSave", tostring(currentLevel))
+	-- if success then
+	  --  print("Game Saved")
+	 -- end
+    end
+   gameContinue = false
 
-   currentLevel = 1
-  
+   print("CURRENT LEVEL = "..currentLevel)
    ammo = 0
    intLives = 5
 
@@ -68,10 +81,21 @@ function setupWorld()
    world:setGravity(0,100)
    world:setMeter(72)
    world:setCallbacks(add, persist, rem, result)
-end
+  end
 
 function love.load()
-  
+    
+   if love.filesystem.exists("boxSave") == false then
+      love.filesystem.newFile("boxSave")
+      love.fileSystem.write("boxSave", tostring(currentLevel))
+   else
+      for data in love.filesystem.lines("boxSave") do
+	 saveData = data
+      end
+      savedLevel = tonumber(saveData)
+      print("SaveData Found "..saveData.."-- "..currentLevel)
+   end
+
    setupWorld();
   -- love.graphics.setMode(screenWidth,screenHeight, false, true, 0)
    love.graphics.setCaption("Box Breaker")
@@ -358,7 +382,7 @@ end
 function drawMap()
    arrMap = getMap(currentLevel)
    tx = 0 
-   ty = 34
+   ty = 10
    brickNum = 0
    for y=1, 16 do
       for x=1, 20 do                                     
@@ -504,8 +528,14 @@ function drawGame()
 	 end
 	 killWorldObjects()
 	 if gameMode ==  "GAME_PLAY" then
-	    gameMode = "LEVEL_CLEAR" 
-       	end
+	    gameMode = "LEVEL_CLEAR"
+	    if savedLevel < currentLevel then
+	       local success = love.filesystem.write("boxSave", tostring(currentLevel))
+	       if success then
+		  print("Game Saved")
+	       end
+            end
+	 end
 	    --drawMap()
      end
         ballReset = true

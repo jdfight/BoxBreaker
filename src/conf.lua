@@ -5,4 +5,5 @@ function love.conf(t)
 	t.screen.height = 480
         t.screen.vsync = false
         t.screen.fsaa = 0
+        --t.identity = "data"
 end
