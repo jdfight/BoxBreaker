@@ -1,6 +1,6 @@
 --Objects and Methods for Physics-Breakout
-local imagePath = "res/pixmaps/"
-local audioPath = "res/audio/"
+ imagePath = "res/pixmaps/"
+ audioPath = "res/audio/"
 
 soundEnabled = true
 
@@ -33,7 +33,8 @@ sfx_boom3 = love.audio.newSource(audioPath.."sfx-01b.mp3", "static")
 sfx_serve = love.audio.newSource(audioPath.."sfx-02.mp3", "static")
 sfx_reflect = love.audio.newSource(audioPath.."sfx-05.mp3", "static")
 sfx_death = love.audio.newSource(audioPath.."sfx-01.mp3", "static")
-sfx_bonus = love.audio.newSource(audioPath.."sfx-06.mp3", "static")
+sfx_bonus = love.audio.newSource(audioPath.."sfx-08.mp3", "static")
+sfx_shot = love.audio.newSource(audioPath.."sfx-09.mp3", "static")
 
 arrSoundBooms = {} 
 arrSoundBooms[0] = sfx_boom 
@@ -256,6 +257,9 @@ function createBomb(name, bx, by)
    objects.bombs[name].impactX = 0
    objects.bombs[name].impactY = 0
    bombNum = bombNum + 1;
+   local sfx =  love.audio.newSource(audioPath.."sfx-01b.mp3", "static")
+   playSound(sfx)
+   sfx = nil
 end
 
 function createBullet(name, bx, by)
@@ -270,6 +274,9 @@ function createBullet(name, bx, by)
    objects.bullets[name].markedForDeath = false
    objects.bullets[name].body:setLinearVelocity(0,-480)
    bulletNum = bulletNum + 1;
+   local sfx =  love.audio.newSource(audioPath.."sfx-09.mp3", "static")
+   playSound(sfx)
+   sfx = nil
 end
 
 function createExplosion(name, ex, ey, ix, iy, strCol)
@@ -314,9 +321,9 @@ function createExplosion(name, ex, ey, ix, iy, strCol)
       end
       
       explosionCount = explosionCount + 1;
-     
-      worldUpdate = true
-   end;
+         worldUpdate = true
+   end
+
 end
 
 function createBonus(bx, by)
@@ -362,7 +369,7 @@ end
 function activateBonus(strBonus)
    if string.find(strBonus, "BonusP") ~= nil then
       score = score + objects.bonuses[strBonus].intScore
-      playSound(sfx_bonus)
+     
    elseif string.find(strBonus, "BonusB") ~= nil then
       createBall("Ball"..ballNum, objects.bonuses[strBonus].body:getX(), objects.paddle.body:getY() - 32, true)
    elseif string.find(strBonus, "BonusS") ~= nil then
@@ -381,6 +388,7 @@ function activateBonus(strBonus)
   --killBonus(strBonus)
   killObject(objects.bonuses[strBonus])
   objects.bonuses[strBonus].body:setY(600)	
+ playSound(sfx_bonus)
 end
 
 function playSound(snd)

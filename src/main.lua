@@ -216,7 +216,7 @@ function gameUpdate(dt)
 	    elseif objects.balls[i].brickHit == true then
 	       objects.balls[i].body:applyImpulse(objects.balls[i].impactX * 10 ,-objects.balls[i].impactY, 0, 0) 
 	       objects.balls[i].brickHit = false;
-	       playSound(arrSoundBooms[intBoomIdx])
+              
 	       intBoomIdx = intBoomIdx+1
 	       if intBoomIdx > 2 then
 	          intBoomIdx = 0
@@ -579,6 +579,9 @@ function add(a, b, coll)
        local brickX, brickY = objects.bricks[a].body:getPosition()
        if (objects.bricks[a].intHP <= 0) then	
 	  createExplosion("Explosion", objects.bricks[a].body:getX(), objects.bricks[a].body:getY(), impactX, impactY)
+	 local sfx =  love.audio.newSource(audioPath.."sfx-01b.mp3", "static")
+	 playSound(sfx)
+	 sfx = nil
 	  if (objects.bricks[a].body:getX() > 0) then
 	     if(math.random(100) > 75 and bonusDropping == false) then
 		bonusDropping = true
@@ -591,8 +594,11 @@ function add(a, b, coll)
 	    objects.bricks[a].markedForDeath = true;
 	 end
          
-      end
-      
+--      else 
+--	  local sfx =  love.audio.newSource(audioPath.."sfx-05.mp3", "static")
+---	  playSound(sfx)
+   --       sfx = nil
+       end       
        score = score + 100
        objects.balls[b].brickHit = true;
        if(objects.balls[b].isBomb == true) then
@@ -606,7 +612,11 @@ function add(a, b, coll)
        end
     elseif (string.find(a,"Brick") and string.find(b, "Bullet") ~= nil) then 
        --printme(explosionColors[objects.bricks[a].intHP - 1]) 
+       local sfx =  love.audio.newSource(audioPath.."sfx-01b.mp3", "static")
+       playSound(sfx)
+       sfx = nil
        if objects.bricks[a].intHP - 1 > 0 then
+	   
 	  createExplosion("Explosion", objects.bricks[a].body:getX(), objects.bricks[a].body:getY(), impactX, impactY, explosionColors[objects.bricks[a].intHP])
        elseif  objects.bricks[a].intHP - 1 < 1 then
           createExplosion("Explosion", objects.bricks[a].body:getX(), objects.bricks[a].body:getY(), impactX, impactY, "red")
