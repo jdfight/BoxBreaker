@@ -3,6 +3,7 @@
  audioPath = "res/audio/"
 
 soundEnabled = true
+maxAudioTracks = 5
 
 score = 0;
 paddleY = 0
@@ -33,7 +34,7 @@ sfx_boom3 = love.audio.newSource(audioPath.."sfx-01b.mp3", "static")
 sfx_serve = love.audio.newSource(audioPath.."sfx-02.mp3", "static")
 sfx_reflect = love.audio.newSource(audioPath.."sfx-05.mp3", "static")
 sfx_death = love.audio.newSource(audioPath.."sfx-01.mp3", "static")
-sfx_bonus = love.audio.newSource(audioPath.."sfx-08.mp3", "static")
+sfx_bonus = love.audio.newSource(audioPath.."sfx-06.mp3", "static")
 sfx_shot = love.audio.newSource(audioPath.."sfx-09.mp3", "static")
 
 arrSoundBooms = {} 
@@ -190,7 +191,7 @@ end
   
 function createBallSplosion()
       for i = 1, 10 do
-	 createBall("Ball"..ballNum, 320, 32)
+	 createBall("Ball"..ballNum, 320, 4)
           objects.balls["Ball"..ballNum - 1].body:applyImpulse( math.random(-480,480), -math.random(-640, 640), 0, 0 );
       end
    end
@@ -392,7 +393,7 @@ function activateBonus(strBonus)
 end
 
 function playSound(snd)
-   if soundEnabled == true then
+   if soundEnabled == true and love.audio.getNumSources() <= maxAudioTracks then
       love.audio.play(snd)
    end
 end

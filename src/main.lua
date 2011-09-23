@@ -73,6 +73,9 @@ function resetStats()
    score = 0;
    gameReset = false
    drawMap()
+   local sfx = love.audio.newSource(audioPath.."sfx-08.mp3", "static")
+   playSound(sfx)
+   sfx = nil
   end
 
 function setupWorld()
@@ -583,7 +586,7 @@ function add(a, b, coll)
 	 playSound(sfx)
 	 sfx = nil
 	  if (objects.bricks[a].body:getX() > 0) then
-	     if(math.random(100) > 75 and bonusDropping == false) then
+	     if(math.random(100) > 60 and bonusDropping == false) then
 		bonusDropping = true
 		createBonus(objects.bricks[a].body:getX(), objects.bricks[a].body:getY())
 	     end 
@@ -594,10 +597,10 @@ function add(a, b, coll)
 	    objects.bricks[a].markedForDeath = true;
 	 end
          
---      else 
---	  local sfx =  love.audio.newSource(audioPath.."sfx-05.mp3", "static")
----	  playSound(sfx)
-   --       sfx = nil
+      else 
+	  local sfx =  love.audio.newSource(audioPath.."sfx-05.mp3", "static")
+	  playSound(sfx)
+          sfx = nil
        end       
        score = score + 100
        objects.balls[b].brickHit = true;
