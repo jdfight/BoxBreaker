@@ -22,7 +22,6 @@ bonusDropping = false
 
 currentLevel = 1
 savedLevel = 1
-maxLevel = 15
 paused = false
 
 ammo = 0
@@ -385,7 +384,7 @@ end
 function drawMap()
    arrMap = getMap(currentLevel)
    tx = 0 
-   ty = 10
+   ty = 36
    brickNum = 0
    for y=1, 16 do
       for x=1, 20 do                                     

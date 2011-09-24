@@ -1,8 +1,12 @@
 mapWidth = 19;
 mapHeight= 16;
+maxLevel = 0
+
 MAPS={}
 
 function loadMaps()
+   local files = love.filesystem.enumerate('maps')
+  maxLevel = #files
   for i=1, maxLevel do
     local M={}
     for l in love.filesystem.lines('maps/map.'..i) do
