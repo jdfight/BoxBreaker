@@ -124,7 +124,7 @@ function love.load()
   -- drawMap()   
 end
 
--- Key Press Events
+-- Key Press Events checked inside Game Loop
 function checkKeys()
      if love.keyboard.isDown("q") then
         love.mouse.setGrab(false)
@@ -150,7 +150,8 @@ function love.update(dt)
    if paused then return end
   -- Game State functions
     if gameMode == "GAME_PLAY" or gameMode == "LEVEL_CLEAR" or gameMode == "GAME_WON" then
-      checkKeys()
+      --First Check Game Key States and update accordingly.
+       checkKeys()
       gameUpdate(dt)
    elseif gameMode == "GAME_OVER" then
       menuUpdate(gameMode)
