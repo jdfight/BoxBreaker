@@ -5,11 +5,10 @@ Overview:
 Box Breaker is a simple breakout clone that demonstrates the LOVE 2D physics engine.  This is my first LOVE game and my first Lua project.
 
 Installation:
-1) Install LOVE Game Engine for your distribution - Requires LOVE 0.7.2 or higher.  LOVE can be found here:
-http://love2d.org
-2) For Linux systems: Execute the PackAndRun script in the /src directory.  This will creake the .love file and launch it automatically.  For non-Linux systems please refer to the instructions located at : 
 
-http://love2d.org/wiki/Game_Distribution
+1) Install LOVE Game Engine for your distribution - Requires LOVE 0.7.2 or higher.  LOVE can be found here: http://love2d.org
+2) For Linux systems: Execute the PackAndRun script in the /src directory.  This will creake the .love file and launch it automatically.  For non-Linux systems please refer to the instructions located at : http://love2d.org/wiki/Game_Distribution
+3) I recently added a Windows 7 installer in the /bin directory for those who just want to play the game. Just run BoxBreaker.msi to install it.
 
 Instructions:
 1) Move the paddle with your mouse.
@@ -18,4 +17,3 @@ Instructions:
 4) Alternate controls: Analog Gamepads are supported.  Tested with and XBox 360 controller
 
 Have fun! 
-
