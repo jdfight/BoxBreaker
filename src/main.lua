@@ -20,12 +20,14 @@ require "maps"
 require "BObjects"
 require "menus"
 
+--GLOBAL VARS
 screenWidth = 640
 screenHeight = 480
 
 saveData = "1"
 text = "<ESC> Quit,  <Q> Release Mouse, <Space> Launch Ball <S> Toggle Sound"
 
+--Game State Variables
 ballHit = false
 wallHit = false
 brickHit = false
@@ -55,6 +57,7 @@ fireworksTime = 10
 
 fileSave = nil
 
+-- Reset Game State Variables
 function resetStats()
    text = "<ESC> Quit,  <Q> Release Mouse, <Space> Launch Ball <S> Toggle Sound"
 
@@ -71,10 +74,6 @@ function resetStats()
      currentLevel = savedLevel
    else 
       currentLevel = 1 
-      --local success = love.filesystem.write("boxSave", tostring(currentLevel))
-	-- if success then
-	  --  print("Game Saved")
-	 -- end
     end
    gameContinue = false
 
@@ -95,6 +94,7 @@ function resetStats()
    sfx = nil
   end
 
+-- Define Box2D World
 function setupWorld()
    world = love.physics.newWorld(-640, -480, 640, 480)
    world:setAllowSleep(true)
@@ -103,6 +103,7 @@ function setupWorld()
    world:setCallbacks(add, persist, rem, result)
   end
 
+-- Run when Love Loads
 function love.load()
     
    if love.filesystem.exists("boxSave") == false then
@@ -123,6 +124,7 @@ function love.load()
   -- drawMap()   
 end
 
+-- Key Press Events
 function checkKeys()
      if love.keyboard.isDown("q") then
         love.mouse.setGrab(false)
@@ -139,11 +141,15 @@ function checkKeys()
      end
 end
 
+-- Love2d Main update Loop- Runs every frame 
+-- dt= Delta Time
 function love.update(dt)
    --print(love.joystick.getAxis(0,0))
-   
+
+   --return if Paused
    if paused then return end
-   if gameMode == "GAME_PLAY" or gameMode == "LEVEL_CLEAR" or gameMode == "GAME_WON" then
+  -- Game State functions
+    if gameMode == "GAME_PLAY" or gameMode == "LEVEL_CLEAR" or gameMode == "GAME_WON" then
       checkKeys()
       gameUpdate(dt)
    elseif gameMode == "GAME_OVER" then
@@ -161,7 +167,8 @@ function love.update(dt)
 	initGame = false
      end
       resetStats()
-  --    createBall("Ball"..ballNum, 100, 100, false)
+
+      --Reset ball position
        for i in pairs(objects.balls) do
        	  objects.balls[i].body:setX(paddleX + 32) 
 	  objects.balls[i].body:setY(paddleY - 10)
@@ -171,6 +178,7 @@ function love.update(dt)
    
 end
 
+--Gameplay-Specific Key Press events
 function checkGameplayKeys()
 
      if love.mouse.isDown("l") or love.joystick.isDown(0, 1) then 
@@ -202,12 +210,17 @@ function checkGameplayKeys()
      end 
   end
 
+-- Gameplay Loop
 function gameUpdate(dt)
-    
+
+   -- update Box2d world 
    world:update(dt)
+
    checkGameplayKeys()
-   
+
+    -- Update Ball states
      local intBalls = 0
+    
      for i in pairs(objects.balls) do
 	 bx, by = objects.balls[i].body:getPosition()
          if(objects.balls[i].markedForDeath == true) then
@@ -276,6 +289,7 @@ function gameUpdate(dt)
 	end
  
      end
+
      if ballReset == true then
 	ballReset = false
      end
@@ -285,7 +299,9 @@ function gameUpdate(dt)
 	    objects.balls[i].body:setY(paddleY - 10)
 	end
      end
-     --dt mod
+     
+     --Joystick controls - axis value * delta time modifier
+     --Plays pretty smoothly with an XBox controller - untested on other joysticks
      local dtMod = (dt * 1000)
      if love.joystick.getAxis (0, 0) < -0.15 then
         paddleX = paddleX + (love.joystick.getAxis(0, 0) * dtMod)
@@ -301,19 +317,12 @@ function gameUpdate(dt)
      elseif paddleX > screenWidth - paddle:getWidth() then 
   	paddleX = screenWidth - paddle:getWidth()
      end
-
+     
+    --Place Paddle
      objects.paddle.body:setX(paddleX + paddle:getWidth()/2)
      objects.paddle.body:setY(paddleY + paddle:getHeight()/2)
-     -- objects.ball.body:applyTorque(rot)
-     -- rot = rot + 1;
-     -- if rot > 360 then
-     --    rot = 0
-  --end 
-      
- --
-   -- for i in pairs(objects.balls) do
-  --  end
- -- print(intBalls)
+   
+  --Check for Lost Life condition
   if(intBalls == 0 and ballAlive == true) then
       ballReset = true;
       ballAlive = false;
@@ -338,7 +347,9 @@ function gameUpdate(dt)
 	    end
 	 end
       end
-   end
+  end
+
+   --check for Dead Object types and remove them from screen.
 
    for i in pairs(objects.explosions) do
      --if i > 0 then
@@ -350,8 +361,9 @@ function gameUpdate(dt)
 	objects.explosions[i].image = nil
 	objects.explosions[i] = nil	
      end
-  end
-   for i in pairs(objects.bricks) do
+   end
+
+    for i in pairs(objects.bricks) do
        if(objects.bricks[i].markedForDeath == true) then
 	
 	  objects.bricks[i].shape:destroy()
@@ -361,8 +373,8 @@ function gameUpdate(dt)
 	--table.remove(objects.explosions[i])
       end
    end
- 
-   for i in pairs(objects.bonuses) do
+
+    for i in pairs(objects.bonuses) do
 
       -- if(objects.bonuses[i].markedForDeath == true) then
       if(objects.bonuses[i].body:getY() > 525) then
@@ -373,7 +385,8 @@ function gameUpdate(dt)
 	--table.remove(objects.explosions[i])
       end
    end
-    for i in pairs(objects.bullets) do
+
+   for i in pairs(objects.bullets) do
 
       if(objects.bullets[i].markedForDeath == true and objects.bullets[i].body:getX() < 0) then
 	  objects.bullets[i].shape:destroy()
@@ -399,6 +412,7 @@ function gameUpdate(dt)
    end 
 end
 
+--Parse Map and add Objects
 function drawMap()
    arrMap = getMap(currentLevel)
    tx = 0 
@@ -420,7 +434,7 @@ function drawMap()
   
 end
 
-	 
+--Love2d Graphics Refresh	 
 function love.draw()
    if gameMode=="GAME_PLAY" or gameMode == "LEVEL_CLEAR" or gameMode == "GAME_WON" then
          drawGame()
@@ -439,6 +453,7 @@ function love.draw()
    end
 end
 
+--Draw Gameplay Screen
 function drawGame()
   love.graphics.setColor(255, 255, 255) 
   if gameMode == "GAME_PLAY" then
@@ -577,6 +592,7 @@ function drawGame()
   love.graphics.print("Lives: "..intLives, 580,4)
 end
 
+-- collision listener runs when Box2D collsions occur
 function add(a, b, coll)
    if ballAlive == true then
     if (a == "Paddle" and string.find(b, "Ball")) then --or (string.find(a, "Ball") and b == "Paddle") then
@@ -675,7 +691,7 @@ function add(a, b, coll)
   end
 end
 
-
+--Move an object offscreen and mark it for death
 function killObject(obj)
     obj.isDead = true
     obj.body:setMass(0,0,0,0)
@@ -687,6 +703,7 @@ function killObject(obj)
 
  end
 
+--Check for Pause Keypress
 function love.keypressed(k)
    if gameMode=="GAME_PLAY" and k == 'p' then
 	love.mouse.setGrab(paused)

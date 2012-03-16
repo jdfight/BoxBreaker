@@ -16,7 +16,7 @@ OF SUCH DAMAGE.
 
 --]]
 
---Menu Screens for BoxBreaker
+--Menu Resources and Screens for BoxBreaker
 
 local imagePath = "res/pixmaps/"
 

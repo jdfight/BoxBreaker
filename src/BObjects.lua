@@ -16,7 +16,7 @@ OF SUCH DAMAGE.
 
 --]]
 
---Objects and Methods for Physics-Breakout
+--Objects Resources and Methods for BoxBreaker
  imagePath = "res/pixmaps/"
  audioPath = "res/audio/"
 
