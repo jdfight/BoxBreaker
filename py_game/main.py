@@ -195,11 +195,12 @@ class Paddle(pygame.sprite.Sprite):
 
 
 class Ball(pygame.sprite.Sprite):
-    def __init__(self, assets, paddle, world):
+    def __init__(self, assets, paddle, world, game):
         super().__init__()
         self.assets = assets
         self.paddle = paddle
         self.world = world
+        self.game = game
         self.image = self.assets.images["ball"]
         self.rect = self.image.get_rect()
         self.state = "on_paddle"
@@ -244,7 +245,7 @@ class Ball(pygame.sprite.Sprite):
             self.state = "moving"
             impulse = (random.uniform(-7, 7), -15)
             self.body.ApplyLinearImpulse(impulse, self.body.worldCenter, True)
-            self.assets.sounds["sfx-02"].play()
+            self.game.play_sound("sfx-02")
             pygame.event.set_grab(True)
             pygame.mouse.set_visible(False)
 
@@ -322,12 +323,12 @@ class Brick(pygame.sprite.Sprite):
                 )
                 self.game.all_sprites.add(powerup)
                 self.game.powerups.add(powerup)
-            self.assets.sounds["sfx-01b"].play()
+            self.game.play_sound("sfx-01b")
             self.game.bodies_to_destroy.append(self.body)
             self.kill()
         else:
             self.image = self.assets.images[self.BRICK_IMAGES.get(self.hp, "brick")]
-            self.assets.sounds["sfx-05"].play()
+            self.game.play_sound("sfx-05")
 
 
 class PowerUp(pygame.sprite.Sprite):
@@ -369,10 +370,11 @@ class Particle(pygame.sprite.Sprite):
 
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, assets, x, y, world):
+    def __init__(self, assets, x, y, world, game):
         super().__init__()
         self.assets = assets
         self.world = world
+        self.game = game
         self.image = self.assets.images["bullet"]
         self.rect = self.image.get_rect(center=(x, y))
         self.create_body()
@@ -417,8 +419,14 @@ class Game:
         self.bodies_to_destroy = []
         self.should_create_new_ball = False
         self.paddle_resize_needed = False
+        self.save_path = os.path.join(BASE_DIR, "savegame.dat")
         self._setup_buttons()
         self._setup_physics()
+
+    def play_sound(self, sound_name):
+        """Play a sound if it exists."""
+        if sound_name in self.assets.sounds:
+            self.assets.sounds[sound_name].play()
 
     def _setup_buttons(self):
         """Create rects for menu buttons."""
@@ -461,6 +469,24 @@ class Game:
         wall_right.CreateEdgeChain([(0, 0), (0, SCREEN_HEIGHT / PPM)])
         self.walls.append(wall_right)
 
+    def save_progress(self, level):
+        """Save the current level to the save file."""
+        try:
+            with open(self.save_path, "w") as f:
+                f.write(str(level))
+        except IOError as e:
+            print(f"Error saving progress: {e}")
+
+    def load_progress(self):
+        """Load the level from the save file."""
+        try:
+            if os.path.exists(self.save_path):
+                with open(self.save_path, "r") as f:
+                    return int(f.read().strip())
+        except (IOError, ValueError) as e:
+            print(f"Error loading progress: {e}")
+        return 0
+
     def _reset_game(self):
         """Reset the game to its initial state."""
         self.score = 0
@@ -468,7 +494,7 @@ class Game:
         self.current_level = 0
         self.ammo = 20
         self.grow_active = False
-        self.assets.sounds["sfx-08"].play()
+        self.play_sound("sfx-08")
 
         self.all_sprites = pygame.sprite.Group()
         self.bricks = pygame.sprite.Group()
@@ -480,7 +506,33 @@ class Game:
         self.paddle = Paddle(self.assets, self.world, self)
         self.all_sprites.add(self.paddle)
 
-        self.ball = Ball(self.assets, self.paddle, self.world)
+        self.ball = Ball(self.assets, self.paddle, self.world, self)
+        self.all_sprites.add(self.ball)
+        self.balls.add(self.ball)
+
+        self._setup_level(self.current_level)
+        self.game_mode = "playing"
+
+    def _continue_game(self):
+        """Continue the game from the saved level."""
+        self.score = 0
+        self.lives = 5
+        self.current_level = self.load_progress()
+        self.ammo = 20
+        self.grow_active = False
+        self.play_sound("sfx-08")
+
+        self.all_sprites = pygame.sprite.Group()
+        self.bricks = pygame.sprite.Group()
+        self.balls = pygame.sprite.Group()
+        self.particles = pygame.sprite.Group()
+        self.powerups = pygame.sprite.Group()
+        self.bullets = pygame.sprite.Group()
+
+        self.paddle = Paddle(self.assets, self.world, self)
+        self.all_sprites.add(self.paddle)
+
+        self.ball = Ball(self.assets, self.paddle, self.world, self)
         self.all_sprites.add(self.ball)
         self.balls.add(self.ball)
 
@@ -532,8 +584,10 @@ class Game:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.new_game_button_rect.collidepoint(event.pos):
                     self._reset_game()
-                elif self.continue_button_rect.collidepoint(event.pos):
-                    self._reset_game()
+                elif self.continue_button_rect.collidepoint(
+                    event.pos
+                ) and os.path.exists(self.save_path):
+                    self._continue_game()
         elif self.game_mode == "playing":
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:  # Left-click
@@ -549,11 +603,15 @@ class Game:
         if self.ammo > 0:
             self.ammo -= 1
             bullet = Bullet(
-                self.assets, self.paddle.rect.centerx, self.paddle.rect.top, self.world
+                self.assets,
+                self.paddle.rect.centerx,
+                self.paddle.rect.top,
+                self.world,
+                self,
             )
             self.all_sprites.add(bullet)
             self.bullets.add(bullet)
-            self.assets.sounds["sfx-09"].play()
+            self.play_sound("sfx-09")
 
     def _update(self):
         if self.game_mode == "playing":
@@ -562,7 +620,7 @@ class Game:
             self.bodies_to_destroy.clear()
 
             if self.should_create_new_ball:
-                self.ball = Ball(self.assets, self.paddle, self.world)
+                self.ball = Ball(self.assets, self.paddle, self.world, self)
                 self.all_sprites.add(self.ball)
                 self.balls.add(self.ball)
                 self.should_create_new_ball = False
@@ -583,11 +641,13 @@ class Game:
                 if self.current_level >= self.map_loader.max_level:
                     self.game_mode = "game_over"
                 else:
+                    if self.current_level > self.load_progress():
+                        self.save_progress(self.current_level)
                     self._setup_level(self.current_level)
                     for ball in self.balls:
                         self.world.DestroyBody(ball.body)
                         ball.kill()
-                    self.ball = Ball(self.assets, self.paddle, self.world)
+                    self.ball = Ball(self.assets, self.paddle, self.world, self)
                     self.all_sprites.add(self.ball)
                     self.balls.add(self.ball)
 
@@ -613,7 +673,7 @@ class Game:
             ball.kill()
             if not self.balls:
                 self.lives -= 1
-                self.assets.sounds["sfx-01"].play()
+                self.play_sound("sfx-01")
                 if self.grow_active:
                     self.paddle_resize_needed = True
                     self.grow_active = False
@@ -632,9 +692,9 @@ class Game:
             self.paddle, self.powerups, True
         )
         for powerup in collided_powerups:
-            self.assets.sounds["sfx-06"].play()
+            self.play_sound("sfx-06")
             if powerup.type == "ball":
-                new_ball = Ball(self.assets, self.paddle, self.world)
+                new_ball = Ball(self.assets, self.paddle, self.world, self)
                 new_ball.launch()
                 self.all_sprites.add(new_ball)
                 self.balls.add(new_ball)
@@ -649,7 +709,7 @@ class Game:
                 self.ammo = 20
             elif powerup.type == "ballMulti":
                 for _ in range(10):
-                    new_ball = Ball(self.assets, self.paddle, self.world)
+                    new_ball = Ball(self.assets, self.paddle, self.world, self)
                     new_ball.launch()
                     self.all_sprites.add(new_ball)
                     self.balls.add(new_ball)
@@ -673,9 +733,10 @@ class Game:
     def _draw_start_menu(self):
         self.screen.blit(self.assets.images["bgTitle"], (0, 0))
         self.screen.blit(self.assets.images["btn_newGame"], self.new_game_button_rect)
-        self.screen.blit(
-            self.assets.images["btn_continue"], self.continue_button_rect
-        )
+        if os.path.exists(self.save_path):
+            self.screen.blit(
+                self.assets.images["btn_continue"], self.continue_button_rect
+            )
 
     def _draw_gameplay(self):
         self.screen.blit(self.assets.images["bg1"], (0, 0))
