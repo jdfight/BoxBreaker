@@ -20,6 +20,8 @@ SCREEN_HEIGHT = 480
 TITLE = "Box Breaker"
 FPS = 60
 PPM = 20.0  # Pixels per meter
+MIN_BALL_SPEED = 10
+MAX_BALL_SPEED = 25
 
 # --- Colors ---
 WHITE = (255, 255, 255)
@@ -257,6 +259,14 @@ class Ball(pygame.sprite.Sprite):
                 - (self.paddle.rect.height / 2 / PPM)
                 - (self.rect.height / 2 / PPM),
             )
+        elif self.state == "moving":
+            vel = self.body.linearVelocity
+            speed = vel.length
+            if speed > MAX_BALL_SPEED:
+                self.body.linearVelocity = (MAX_BALL_SPEED / speed) * vel
+            elif speed > 0 and speed < MIN_BALL_SPEED:
+                self.body.linearVelocity = (MIN_BALL_SPEED / speed) * vel
+
         self.rect.center = (self.body.position.x * PPM, self.body.position.y * PPM)
 
 
@@ -304,28 +314,31 @@ class Brick(pygame.sprite.Sprite):
         )
         self.body.userData = self
 
+    def destroy(self):
+        color = self.BRICK_PARTICLE_COLORS.get(self.hp, "red")
+        for _ in range(10):
+            particle = Particle(
+                self.assets, self.rect.centerx, self.rect.centery, color
+            )
+            self.game.all_sprites.add(particle)
+            self.game.particles.add(particle)
+        if random.random() < 0.2:  # 20% chance of dropping a power-up
+            powerup_type = random.choice(
+                ["ball", "bomb", "gold", "shot", "ballMulti", "life", "grow"]
+            )
+            powerup = PowerUp(
+                self.assets, self.rect.centerx, self.rect.centery, powerup_type
+            )
+            self.game.all_sprites.add(powerup)
+            self.game.powerups.add(powerup)
+        self.game.play_sound("sfx-01b")
+        self.game.bodies_to_destroy.append(self.body)
+        self.kill()
+
     def hit(self):
         self.hp -= 1
         if self.hp <= 0:
-            color = self.BRICK_PARTICLE_COLORS.get(self.hp, "red")
-            for _ in range(10):
-                particle = Particle(
-                    self.assets, self.rect.centerx, self.rect.centery, color
-                )
-                self.game.all_sprites.add(particle)
-                self.game.particles.add(particle)
-            if random.random() < 0.2:  # 20% chance of dropping a power-up
-                powerup_type = random.choice(
-                    ["ball", "bomb", "gold", "shot", "ballMulti", "life", "grow"]
-                )
-                powerup = PowerUp(
-                    self.assets, self.rect.centerx, self.rect.centery, powerup_type
-                )
-                self.game.all_sprites.add(powerup)
-                self.game.powerups.add(powerup)
-            self.game.play_sound("sfx-01b")
-            self.game.bodies_to_destroy.append(self.body)
-            self.kill()
+            self.destroy()
         else:
             self.image = self.assets.images[self.BRICK_IMAGES.get(self.hp, "brick")]
             self.game.play_sound("sfx-05")
@@ -398,6 +411,7 @@ class Bullet(pygame.sprite.Sprite):
     def update(self):
         self.rect.center = (self.body.position.x * PPM, self.body.position.y * PPM)
         if self.rect.bottom < 0:
+            self.game.bodies_to_destroy.append(self.body)
             self.kill()
 
 
@@ -420,6 +434,12 @@ class Game:
         self.should_create_new_ball = False
         self.paddle_resize_needed = False
         self.save_path = os.path.join(BASE_DIR, "savegame.dat")
+        self.score_val = -1
+        self.lives_val = -1
+        self.ammo_val = -1
+        self.score_text = None
+        self.lives_text = None
+        self.ammo_text = None
         self._setup_buttons()
         self._setup_physics()
 
@@ -489,6 +509,10 @@ class Game:
 
     def _reset_game(self):
         """Reset the game to its initial state."""
+        if hasattr(self, 'paddle') and self.paddle:
+            self.bodies_to_destroy.append(self.paddle.body)
+            self.paddle.kill()
+
         self.score = 0
         self.lives = 5
         self.current_level = 0
@@ -515,6 +539,10 @@ class Game:
 
     def _continue_game(self):
         """Continue the game from the saved level."""
+        if hasattr(self, 'paddle') and self.paddle:
+            self.bodies_to_destroy.append(self.paddle.body)
+            self.paddle.kill()
+
         self.score = 0
         self.lives = 5
         self.current_level = self.load_progress()
@@ -541,7 +569,7 @@ class Game:
 
     def _setup_level(self, level_num):
         for brick in self.bricks:
-            self.world.DestroyBody(brick.body)
+            self.bodies_to_destroy.append(brick.body)
             brick.kill()
 
         level_map = self.map_loader.get_map(level_num)
@@ -552,10 +580,14 @@ class Game:
         brick_width = self.assets.images["brick"].get_width()
         brick_height = self.assets.images["brick"].get_height()
 
+        num_columns = len(level_map[0])
+        total_grid_width = (num_columns * brick_width) + ((num_columns - 1) * 2)
+        start_x = (SCREEN_WIDTH - total_grid_width) // 2
+
         for y, row in enumerate(level_map):
             for x, brick_hp in enumerate(row):
                 if brick_hp > 0:
-                    brick_x = x * (brick_width + 2) + 1
+                    brick_x = start_x + x * (brick_width + 2)
                     brick_y = y * (brick_height + 2) + 36
                     brick = Brick(
                         self.assets, brick_x, brick_y, brick_hp, self, self.world
@@ -581,6 +613,8 @@ class Game:
 
     def _handle_events(self, event):
         if self.game_mode == "start_menu":
+            pygame.mouse.set_visible(True)
+            pygame.event.set_grab(False)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 if self.new_game_button_rect.collidepoint(event.pos):
                     self._reset_game()
@@ -630,6 +664,16 @@ class Game:
             if self.paddle_resize_needed:
                 self.paddle.resize(self.assets.images["paddle"].get_rect().width)
                 self.paddle_resize_needed = False
+
+            if self.score != self.score_val:
+                self.score_val = self.score
+                self.score_text = self.font.render(f"Score: {self.score}", True, WHITE)
+            if self.lives != self.lives_val:
+                self.lives_val = self.lives
+                self.lives_text = self.font.render(f"Lives: {self.lives}", True, WHITE)
+            if self.ammo != self.ammo_val:
+                self.ammo_val = self.ammo
+                self.ammo_text = self.font.render(f"Ammo: {self.ammo}", True, WHITE)
 
             self.all_sprites.update()
             self.particles.update()
@@ -683,9 +727,9 @@ class Game:
                     self.should_create_new_ball = True
 
     def explode(self, brick):
-        for b in self.bricks:
+        for b in self.bricks.copy():
             if b.rect.colliderect(brick.rect.inflate(50, 50)):
-                b.hit()
+                b.destroy()
 
     def _handle_powerup_collisions(self):
         collided_powerups = pygame.sprite.spritecollide(
@@ -742,14 +786,13 @@ class Game:
         self.screen.blit(self.assets.images["bg1"], (0, 0))
         self.all_sprites.draw(self.screen)
         self.particles.draw(self.screen)
-        score_text = self.font.render(f"Score: {self.score}", True, WHITE)
-        lives_text = self.font.render(f"Lives: {self.lives}", True, WHITE)
-        ammo_text = self.font.render(f"Ammo: {self.ammo}", True, WHITE)
-        self.screen.blit(score_text, (10, 10))
-        self.screen.blit(lives_text, (SCREEN_WIDTH - lives_text.get_width() - 10, 10))
-        if self.ammo > 0:
+        if self.score_text:
+            self.screen.blit(self.score_text, (10, 10))
+        if self.lives_text:
+            self.screen.blit(self.lives_text, (SCREEN_WIDTH - self.lives_text.get_width() - 10, 10))
+        if self.ammo > 0 and self.ammo_text:
             self.screen.blit(
-                ammo_text, (SCREEN_WIDTH // 2 - ammo_text.get_width() // 2, 10)
+                self.ammo_text, (SCREEN_WIDTH // 2 - self.ammo_text.get_width() // 2, 10)
             )
 
     def _draw_game_over(self):
