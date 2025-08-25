@@ -19,6 +19,7 @@ func _ready():
 	# larger scenes, signals or groups would be better.
 	paddle = get_parent().get_node("Paddle")
 	connect("body_entered", _on_body_entered)
+	freeze = true
 
 func _on_body_entered(body):
 	if body.is_in_group("bricks"):
@@ -36,6 +37,7 @@ func _physics_process(delta):
 
 func launch():
 	if state == BallState.ON_PADDLE:
+		freeze = false
 		state = BallState.MOVING
 		var launch_direction = Vector2(randf_range(-1, 1), -1).normalized()
 		linear_velocity = launch_direction * MIN_SPEED
@@ -52,6 +54,7 @@ func set_as_bomb(is_bomb_ball: bool):
 
 func reset_ball():
 	state = BallState.ON_PADDLE
+	freeze = true
 	linear_velocity = Vector2.ZERO
 	angular_velocity = 0
 	set_as_bomb(false)
