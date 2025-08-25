@@ -23,10 +23,10 @@ func _physics_process(delta):
 func set_type(new_type: String):
 	type = new_type
 	if POWERUP_TEXTURES.has(type):
-		$Sprite2D.texture = POWERUP_TEXTURES[type]
+		$Sprite.texture = POWERUP_TEXTURES[type]
 	else:
 		# Default to ball if type is invalid
-		$Sprite2D.texture = POWERUP_TEXTURES["ball"]
+		$Sprite.texture = POWERUP_TEXTURES["ball"]
 		type = "ball"
 
 func _on_body_entered(body):
