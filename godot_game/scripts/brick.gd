@@ -60,9 +60,9 @@ func destroy_brick():
 		var powerup_types = ["ball", "bomb", "gold", "shot", "ballMulti", "life", "grow"]
 		var chosen_type = powerup_types.pick_random()
 		var new_powerup = PowerUp.instantiate()
-		new_powerup.set_type(chosen_type)
-		new_powerup.position = global_position
 		get_parent().add_child(new_powerup)
+		new_powerup.position = global_position
+		new_powerup.set_type(chosen_type)
 
 	var particles = BrickParticles.instantiate()
 	particles.position = global_position
