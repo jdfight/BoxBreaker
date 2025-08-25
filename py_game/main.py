@@ -20,8 +20,8 @@ SCREEN_HEIGHT = 480
 TITLE = "Box Breaker"
 FPS = 60
 PPM = 20.0  # Pixels per meter
-MIN_BALL_SPEED = 10
-MAX_BALL_SPEED = 25
+MIN_BALL_SPEED = 13
+MAX_BALL_SPEED = 20
 
 # --- Colors ---
 WHITE = (255, 255, 255)
@@ -167,34 +167,63 @@ class Paddle(pygame.sprite.Sprite):
         self.create_body()
 
     def create_body(self):
+        width = self.rect.width / 2 / PPM
+        height = self.rect.height / 2 / PPM
+
+        top_y = height
+        bottom_y = -height
+        top_width = width
+        bottom_width = width * 0.8
+
+        vertices = [
+            (-top_width, top_y),
+            (top_width, top_y),
+            (bottom_width, bottom_y),
+            (-bottom_width, bottom_y),
+        ]
+
         self.body = self.world.CreateKinematicBody(
             position=(self.rect.centerx / PPM, self.rect.centery / PPM),
-            shapes=polygonShape(
-                box=(
-                    self.rect.width / 2 / PPM,
-                    self.rect.height / 2 / PPM,
-                )
-            ),
+            shapes=polygonShape(vertices=vertices),
         )
         self.body.userData = self
 
     def resize(self, width):
         self.body.DestroyFixture(self.body.fixtures[0])
+        
+        new_width = width / 2 / PPM
+        height = self.rect.height / 2 / PPM
+
+        top_y = height
+        bottom_y = -height
+        top_width = new_width
+        bottom_width = new_width * 0.8
+
+        vertices = [
+            (-top_width, top_y),
+            (top_width, top_y),
+            (bottom_width, bottom_y),
+            (-bottom_width, bottom_y),
+        ]
+        
         self.body.CreateFixture(
             fixtureDef(
-                shape=polygonShape(
-                    box=(width / 2 / PPM, self.rect.height / 2 / PPM)
-                )
+                shape=polygonShape(vertices=vertices)
             )
         )
         self.image = pygame.transform.scale(self.assets.images["paddle"], (width, self.rect.height))
         self.rect = self.image.get_rect(center=self.rect.center)
 
     def update(self):
-        mouse_x = pygame.mouse.get_pos()[0]
+        mouse_x, _ = self.game._get_scaled_mouse_pos(pygame.mouse.get_pos())
         self.body.position = (mouse_x / PPM, self.body.position.y)
         self.rect.centerx = self.body.position.x * PPM
 
+    def draw(self, surface):
+        vertices = [(self.body.transform * v) * PPM for v in self.body.fixtures[0].shape.vertices]
+        #pygame.draw.polygon(surface, WHITE, vertices)
+        surface.blit(self.image, self.rect)
+        
 
 class Ball(pygame.sprite.Sprite):
     def __init__(self, assets, paddle, world, game):
@@ -316,7 +345,7 @@ class Brick(pygame.sprite.Sprite):
 
     def destroy(self):
         color = self.BRICK_PARTICLE_COLORS.get(self.hp, "red")
-        for _ in range(10):
+        for _ in range(5):
             particle = Particle(
                 self.assets, self.rect.centerx, self.rect.centery, color
             )
@@ -332,8 +361,9 @@ class Brick(pygame.sprite.Sprite):
             self.game.all_sprites.add(powerup)
             self.game.powerups.add(powerup)
         self.game.play_sound("sfx-01b")
-        self.game.bodies_to_destroy.append(self.body)
-        self.kill()
+        if(self.body not in self.game.bodies_to_destroy):
+            self.game.bodies_to_destroy.append(self.body)
+            self.kill()
 
     def hit(self):
         self.hp -= 1
@@ -411,8 +441,9 @@ class Bullet(pygame.sprite.Sprite):
     def update(self):
         self.rect.center = (self.body.position.x * PPM, self.body.position.y * PPM)
         if self.rect.bottom < 0:
-            self.game.bodies_to_destroy.append(self.body)
-            self.kill()
+            if self.body not in self.game.bodies_to_destroy:
+                self.game.bodies_to_destroy.append(self.body)
+                self.kill()
 
 
 # --- Game Class ---
@@ -423,7 +454,8 @@ class Game:
 
     def __init__(self):
         pygame.init()
-        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        self.screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.RESIZABLE)
+        self.game_surface = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
         pygame.display.set_caption(TITLE)
         self.clock = pygame.time.Clock()
         self.assets = AssetManager()
@@ -447,6 +479,20 @@ class Game:
         """Play a sound if it exists."""
         if sound_name in self.assets.sounds:
             self.assets.sounds[sound_name].play()
+
+    def _get_scaled_mouse_pos(self, pos):
+        screen_width, screen_height = self.screen.get_size()
+        scale = min(screen_width / SCREEN_WIDTH, screen_height / SCREEN_HEIGHT)
+        scaled_width = int(SCREEN_WIDTH * scale)
+        scaled_height = int(SCREEN_HEIGHT * scale)
+        pos_x = (screen_width - scaled_width) / 2
+        pos_y = (screen_height - scaled_height) / 2
+
+        mouse_x, mouse_y = pos
+        unscaled_x = (mouse_x - pos_x) / scale
+        unscaled_y = (mouse_y - pos_y) / scale
+
+        return int(unscaled_x), int(unscaled_y)
 
     def _setup_buttons(self):
         """Create rects for menu buttons."""
@@ -509,14 +555,23 @@ class Game:
 
     def _reset_game(self):
         """Reset the game to its initial state."""
+        for body in self.world.bodies:
+            if isinstance(body.userData, Brick):
+                self.bodies_to_destroy.append(body)
+                body.userData.kill()
+
         if hasattr(self, 'paddle') and self.paddle:
             self.bodies_to_destroy.append(self.paddle.body)
             self.paddle.kill()
 
+        for body in self.bodies_to_destroy:
+            self.world.DestroyBody(body)
+        
+        self.bodies_to_destroy = []
         self.score = 0
         self.lives = 5
         self.current_level = 0
-        self.ammo = 20
+        self.ammo = 0
         self.grow_active = False
         self.play_sound("sfx-08")
 
@@ -539,14 +594,24 @@ class Game:
 
     def _continue_game(self):
         """Continue the game from the saved level."""
+        for body in self.world.bodies:
+            if isinstance(body.userData, Brick):
+                self.bodies_to_destroy.append(body)
+                body.userData.kill()
+
         if hasattr(self, 'paddle') and self.paddle:
             self.bodies_to_destroy.append(self.paddle.body)
             self.paddle.kill()
 
+        for body in self.bodies_to_destroy:
+            self.world.DestroyBody(body)
+        
+        self.bodies_to_destroy = []
+
         self.score = 0
         self.lives = 5
         self.current_level = self.load_progress()
-        self.ammo = 20
+        self.ammo = 0
         self.grow_active = False
         self.play_sound("sfx-08")
 
@@ -569,8 +634,9 @@ class Game:
 
     def _setup_level(self, level_num):
         for brick in self.bricks:
-            self.bodies_to_destroy.append(brick.body)
-            brick.kill()
+            if(brick.body not in self.bodies_to_destroy):
+                self.bodies_to_destroy.append(brick.body)
+                brick.kill()
 
         level_map = self.map_loader.get_map(level_num)
         if not level_map:
@@ -603,6 +669,8 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+                if event.type == pygame.VIDEORESIZE:
+                    self.screen = pygame.display.set_mode(event.size, pygame.RESIZABLE)
                 self._handle_events(event)
 
             self._update()
@@ -616,10 +684,11 @@ class Game:
             pygame.mouse.set_visible(True)
             pygame.event.set_grab(False)
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                if self.new_game_button_rect.collidepoint(event.pos):
+                mouse_pos = self._get_scaled_mouse_pos(event.pos)
+                if self.new_game_button_rect.collidepoint(mouse_pos):
                     self._reset_game()
                 elif self.continue_button_rect.collidepoint(
-                    event.pos
+                    mouse_pos
                 ) and os.path.exists(self.save_path):
                     self._continue_game()
         elif self.game_mode == "playing":
@@ -706,15 +775,17 @@ class Game:
 
     def handle_bullet_brick_collision(self, bullet, brick):
         if bullet in self.bullets:
-            self.bodies_to_destroy.append(bullet.body)
-            bullet.kill()
-            brick.hit()
-            self.score += 100
+            if (bullet.body not in self.bodies_to_destroy):
+                self.bodies_to_destroy.append(bullet.body)
+                bullet.kill()
+                brick.hit()
+                self.score += 100
 
     def handle_ball_floor_collision(self, ball):
         if ball in self.balls:
-            self.bodies_to_destroy.append(ball.body)
-            ball.kill()
+            if(ball.body not in self.bodies_to_destroy):
+                self.bodies_to_destroy.append(ball.body)
+                ball.kill()
             if not self.balls:
                 self.lives -= 1
                 self.play_sound("sfx-01")
@@ -752,7 +823,7 @@ class Game:
             elif powerup.type == "shot":
                 self.ammo = 20
             elif powerup.type == "ballMulti":
-                for _ in range(10):
+                for _ in range(4):
                     new_ball = Ball(self.assets, self.paddle, self.world, self)
                     new_ball.launch()
                     self.all_sprites.add(new_ball)
@@ -772,33 +843,58 @@ class Game:
         elif self.game_mode == "game_over":
             self._draw_game_over()
 
+        # Scale the game surface to the window size, maintaining aspect ratio
+        screen_width, screen_height = self.screen.get_size()
+        
+        # determine the scale factor
+        scale = min(screen_width / SCREEN_WIDTH, screen_height / SCREEN_HEIGHT)
+        
+        # calculate the new size of the game surface
+        scaled_width = int(SCREEN_WIDTH * scale)
+        scaled_height = int(SCREEN_HEIGHT * scale)
+        
+        # scale the game surface
+        scaled_surface = pygame.transform.smoothscale(self.game_surface, (scaled_width, scaled_height))
+        
+        # calculate the position to center the scaled surface
+        pos_x = (screen_width - scaled_width) / 2
+        pos_y = (screen_height - scaled_height) / 2
+        
+        # blit the scaled surface to the screen
+        self.screen.fill(BLACK) # fill with black bars
+        self.screen.blit(scaled_surface, (pos_x, pos_y))
+
         pygame.display.flip()
 
     def _draw_start_menu(self):
-        self.screen.blit(self.assets.images["bgTitle"], (0, 0))
-        self.screen.blit(self.assets.images["btn_newGame"], self.new_game_button_rect)
+        self.game_surface.blit(self.assets.images["bgTitle"], (0, 0))
+        self.game_surface.blit(self.assets.images["btn_newGame"], self.new_game_button_rect)
         if os.path.exists(self.save_path):
-            self.screen.blit(
+            self.game_surface.blit(
                 self.assets.images["btn_continue"], self.continue_button_rect
             )
 
     def _draw_gameplay(self):
-        self.screen.blit(self.assets.images["bg1"], (0, 0))
-        self.all_sprites.draw(self.screen)
-        self.particles.draw(self.screen)
+        self.game_surface.blit(self.assets.images["bg1"], (0, 0))
+        for sprite in self.all_sprites:
+            if isinstance(sprite, Paddle):
+                sprite.draw(self.game_surface)
+            else:
+                self.game_surface.blit(sprite.image, sprite.rect)
+        self.particles.draw(self.game_surface)
         if self.score_text:
-            self.screen.blit(self.score_text, (10, 10))
+            self.game_surface.blit(self.score_text, (10, 10))
         if self.lives_text:
-            self.screen.blit(self.lives_text, (SCREEN_WIDTH - self.lives_text.get_width() - 10, 10))
+            self.game_surface.blit(self.lives_text, (SCREEN_WIDTH - self.lives_text.get_width() - 10, 10))
         if self.ammo > 0 and self.ammo_text:
-            self.screen.blit(
+            self.game_surface.blit(
                 self.ammo_text, (SCREEN_WIDTH // 2 - self.ammo_text.get_width() // 2, 10)
             )
 
     def _draw_game_over(self):
-        self.screen.blit(self.assets.images["bgGameOver"], (0, 0))
+        self.game_surface.blit(self.assets.images["bgGameOver"], (0, 0))
         go_text = self.font.render("Click to continue", True, WHITE)
-        self.screen.blit(
+        self.game_surface.blit(
             go_text, (SCREEN_WIDTH // 2 - go_text.get_width() // 2, 300)
         )
 
