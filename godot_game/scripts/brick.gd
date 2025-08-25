@@ -17,14 +17,14 @@ const BRICK_TEXTURES = {
 }
 
 const BRICK_COLORS = {
-	1: ColorN("firebrick"),
-	2: ColorN("cornflowerblue"),
-	3: ColorN("gold"),
-	4: ColorN("limegreen"),
-	5: ColorN("orange"),
-	6: ColorN("purple"),
+	1: Color("firebrick"),
+	2: Color("cornflowerblue"),
+	3: Color("gold"),
+	4: Color("limegreen"),
+	5: Color("orange"),
+	6: Color("purple"),
 	7: Color(0.2, 0.2, 0.2), # Dark gray for black bricks
-	8: ColorN("silver"),
+	8: Color("silver"),
 }
 
 var hp: int = 1
