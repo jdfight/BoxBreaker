@@ -5,13 +5,6 @@ signal brick_destroyed(brick)
 const PowerUp = preload("res://scenes/powerup.tscn")
 const BrickParticles = preload("res://scenes/brick_particles.tscn")
 
-var hp: int = 1
-
-@onready var sprite = $Sprite
-
-func _ready():
-	add_to_group("bricks")
-
 const BRICK_TEXTURES = {
 	1: preload("res://assets/pixmaps/brick.png"),
 	2: preload("res://assets/pixmaps/brick_blue.png"),
@@ -33,6 +26,13 @@ const BRICK_COLORS = {
 	7: Color(0.2, 0.2, 0.2), # Dark gray for black bricks
 	8: ColorN("silver"),
 }
+
+var hp: int = 1
+
+@onready var sprite = $Sprite
+
+func _ready():
+	add_to_group("bricks")
 
 func set_hp(new_hp: int):
 	hp = new_hp
