@@ -141,9 +141,9 @@ func _load_level(level_num):
 			if brick_hp > 0:
 				var new_brick = Brick.instantiate()
 				var brick_pos = Vector2(start_x + x * (brick_size.x + 2), y * (brick_size.y + 2) + 36)
+				add_child(new_brick)
 				new_brick.position = brick_pos
 				new_brick.set_hp(brick_hp)
-				add_child(new_brick)
 				new_brick.connect("brick_destroyed", _on_brick_destroyed)
 
 
