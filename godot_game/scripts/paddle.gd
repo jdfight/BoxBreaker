@@ -9,16 +9,16 @@ func _ready():
 @onready var collision_shape = $CollisionShape
 
 func _physics_process(delta):
-	var target_x = get_global_mouse_position().x
-	var new_position = position
-	new_position.x = lerp(position.x, target_x, LERP_FACTOR)
-
-	# Clamp position within screen bounds
+	# Calculate target position, clamped within screen bounds
 	var screen_width = get_viewport_rect().size.x
 	var paddle_width = sprite.get_rect().size.x / 2
-	new_position.x = clamp(new_position.x, paddle_width, screen_width - paddle_width)
+	var target_x = clamp(get_global_mouse_position().x, paddle_width, screen_width - paddle_width)
 
-	position = new_position
+	# Set velocity to move towards the target X position
+	# The multiplier controls how quickly it follows the mouse (like a lerp factor)
+	velocity.x = (target_x - position.x) * 15
+	velocity.y = 0 # Ensure no vertical movement
+
 	move_and_slide()
 
 func resize_paddle(new_width: float):
