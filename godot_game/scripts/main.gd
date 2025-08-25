@@ -38,7 +38,7 @@ func _on_child_entered_tree(node):
 	if node is Area2D and node.has_signal("powerup_collected"):
 		node.connect("powerup_collected", _on_powerup_collected)
 
-func _unhandled_input(event):
+func _input(event):
 	if game_state == GameState.PLAYING and event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			for ball in balls:
