@@ -152,6 +152,9 @@ func _load_level(level_num):
 func create_new_ball():
 	var new_ball = Ball.instantiate()
 	add_child(new_ball)
+	# Explicitly set position relative to the paddle on creation
+	if is_instance_valid($Paddle):
+		new_ball.position = $Paddle.position + Vector2(0, -25)
 	balls.append(new_ball)
 
 func _on_brick_destroyed(brick):

@@ -15,6 +15,8 @@ script = ExtResource("1_abcde")
 gravity_scale = 0.0
 continuous_cd = 2 # Continuous collision detection for fast-moving object
 physics_material_override = SubResource("PhysicsMaterial_bouncy")
+contact_monitor = true
+max_contacts_reported = 4
 
 [node name="Sprite" type="Sprite2D" parent="."]
 texture = ExtResource("2_fghij")
