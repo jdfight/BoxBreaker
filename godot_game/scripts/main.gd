@@ -62,26 +62,28 @@ func _process(delta):
 
 func change_state(new_state: GameState):
 	game_state = new_state
+
+	# Disable all UI screens first to prevent input conflicts
+	start_menu.process_mode = Node.PROCESS_MODE_DISABLED
+	start_menu.visible = false
+	game_over_screen.process_mode = Node.PROCESS_MODE_DISABLED
+	game_over_screen.visible = false
+	game_won_screen.process_mode = Node.PROCESS_MODE_DISABLED
+	game_won_screen.visible = false
+	hud.visible = false
+
+	# Enable the correct UI screen
 	match game_state:
 		GameState.START_MENU:
+			start_menu.process_mode = Node.PROCESS_MODE_INHERIT
 			start_menu.visible = true
-			hud.visible = false
-			game_over_screen.visible = false
-			game_won_screen.visible = false
 		GameState.PLAYING:
-			start_menu.visible = false
 			hud.visible = true
-			game_over_screen.visible = false
-			game_won_screen.visible = false
 		GameState.GAME_OVER:
-			start_menu.visible = false
-			hud.visible = false
+			game_over_screen.process_mode = Node.PROCESS_MODE_INHERIT
 			game_over_screen.visible = true
-			game_won_screen.visible = false
 		GameState.GAME_WON:
-			start_menu.visible = false
-			hud.visible = false
-			game_over_screen.visible = false
+			game_won_screen.process_mode = Node.PROCESS_MODE_INHERIT
 			game_won_screen.visible = true
 	update_ui()
 
