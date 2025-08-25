@@ -1,0 +1,23 @@
+[gd_scene load_steps=4 format=3 uid="uid://cjw7q3w8xqyv"]
+
+[ext_resource type="Script" path="res://scripts/ball.gd" id="1_abcde"]
+[ext_resource type="Texture2D" uid="uid://dkh2h2j2h2j2" path="res://assets/pixmaps/ball.png" id="2_fghij"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_12345"]
+radius = 8.0
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_bouncy"]
+friction = 0.0
+bounce = 1.0
+
+[node name="Ball" type="RigidBody2D"]
+script = ExtResource("1_abcde")
+gravity_scale = 0.0
+continuous_cd = 2 # Continuous collision detection for fast-moving object
+physics_material_override = SubResource("PhysicsMaterial_bouncy")
+
+[node name="Sprite" type="Sprite2D" parent="."]
+texture = ExtResource("2_fghij")
+
+[node name="CollisionShape" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_12345")
