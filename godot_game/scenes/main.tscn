@@ -28,6 +28,7 @@ centered = false
 position = Vector2(320, 450)
 
 [node name="Walls" type="StaticBody2D" parent="."]
+collision_layer = 1
 
 [node name="Top" type="CollisionShape2D" parent="Walls"]
 position = Vector2(320, -10)

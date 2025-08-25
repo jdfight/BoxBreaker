@@ -12,6 +12,8 @@ bounce = 1.0
 
 [node name="Ball" type="RigidBody2D"]
 script = ExtResource("1_abcde")
+collision_layer = 2
+collision_mask = 13
 gravity_scale = 0.0
 linear_damp = 0.0
 continuous_cd = 2 # Continuous collision detection for fast-moving object

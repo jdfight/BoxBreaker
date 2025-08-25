@@ -8,6 +8,13 @@
 
 config_version=5
 
+[layer_names]
+
+2d_physics/layer_1="Walls"
+2d_physics/layer_2="Ball"
+2d_physics/layer_3="Paddle"
+2d_physics/layer_4="Bricks"
+
 [application]
 
 config/name="Box Breaker"
