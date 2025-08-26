@@ -141,7 +141,7 @@ func _load_level(level_num):
 	var screen_width = get_viewport_rect().size.x
 	var num_columns = map_data[0].size()
 	var total_grid_width = (num_columns * brick_size.x) + ((num_columns - 1) * 2)
-	var start_x = (screen_width - total_grid_width) / 2
+	var start_x = ((screen_width - total_grid_width) / 2) + (brick_size.x / 2) 
 
 	for y in range(map_data.size()):
 		for x in range(map_data[y].size()):
@@ -160,7 +160,7 @@ func create_new_ball(launch_now = false):
 	add_child(new_ball)
 	new_ball.reset_ball()
 	if is_instance_valid($Paddle):
-		new_ball.position = $Paddle.position + Vector2(0, -25)
+		new_ball.position = $Paddle.position + Vector2(0, -16)
 	balls.append(new_ball)
 	if launch_now:
 		new_ball.launch()
@@ -195,11 +195,11 @@ func _on_powerup_collected(type):
 			for ball in balls:
 				ball.set_as_bomb(true)
 		"gold":
-			score += 500
+			score += 300
 		"shot":
 			ammo = 20
 		"ballMulti":
-			for i in range(4):
+			for i in range(10):
 				create_new_ball(true)
 		"life":
 			lives += 1
@@ -211,7 +211,9 @@ func _on_powerup_collected(type):
 func _on_floor_sensor_body_entered(body):
 	print("Floor sensor entered by: ", body.name)
 	if body is RigidBody2D: # It's a ball
+		print("Balls before erase: ", balls)
 		balls.erase(body)
+		print("Balls after erase: ", balls)
 		body.queue_free()
 
 		if balls.is_empty():
@@ -221,6 +223,7 @@ func _on_floor_sensor_body_entered(body):
 			if lives <= 0:
 				change_state(GameState.GAME_OVER)
 			else:
+				print("Creating new ball")
 				call_deferred("create_new_ball")
 
 func save_progress(level):

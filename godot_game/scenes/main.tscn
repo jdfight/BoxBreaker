@@ -15,7 +15,7 @@ size = Vector2(660, 20)
 size = Vector2(20, 500)
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_floor"]
-size = Vector2(660, 20)
+size = Vector2(1280, 133)
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_f8fgr")
@@ -47,6 +47,27 @@ collision_layer = 2
 collision_mask = 2
 
 [node name="CollisionShape" type="CollisionShape2D" parent="FloorSensor"]
+position = Vector2(-1, 56.5)
+shape = SubResource("RectangleShape2D_floor")
+
+[node name="FloorSensor2" type="Area2D" parent="."]
+position = Vector2(320, 490)
+collision_layer = 2
+collision_mask = 2
+
+[node name="CollisionShape" type="CollisionShape2D" parent="FloorSensor2"]
+position = Vector2(-451, -245)
+rotation = 1.5708
+shape = SubResource("RectangleShape2D_floor")
+
+[node name="FloorSensor3" type="Area2D" parent="."]
+position = Vector2(320, 490)
+collision_layer = 2
+collision_mask = 2
+
+[node name="CollisionShape" type="CollisionShape2D" parent="FloorSensor3"]
+position = Vector2(450, -224)
+rotation = 1.5708
 shape = SubResource("RectangleShape2D_floor")
 
 [node name="LevelCompleteTimer" type="Timer" parent="."]
@@ -80,9 +101,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -64.0
-offset_top = -25.0
+offset_top = 54.0
 offset_right = 64.0
-offset_bottom = 25.0
+offset_bottom = 104.0
 grow_horizontal = 2
 grow_vertical = 2
 texture_normal = ExtResource("3_g7wsc")
@@ -94,10 +115,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -64.0
-offset_top = 35.0
-offset_right = 64.0
-offset_bottom = 85.0
+offset_left = -67.0
+offset_top = 119.0
+offset_right = 61.0
+offset_bottom = 169.0
 grow_horizontal = 2
 grow_vertical = 2
 texture_normal = ExtResource("4_58h1v")
@@ -218,5 +239,7 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [connection signal="body_entered" from="FloorSensor" to="." method="_on_floor_sensor_body_entered"]
+[connection signal="body_entered" from="FloorSensor2" to="." method="_on_floor_sensor_body_entered"]
+[connection signal="body_entered" from="FloorSensor3" to="." method="_on_floor_sensor_body_entered"]
 [connection signal="pressed" from="UI/StartMenu/NewGameButton" to="." method="_on_new_game_button_pressed"]
 [connection signal="pressed" from="UI/StartMenu/ContinueButton" to="." method="_on_continue_button_pressed"]

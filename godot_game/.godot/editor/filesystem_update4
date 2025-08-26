@@ -1,6 +1,7 @@
-res://scenes/main.tscn
 res://scenes/ball.tscn
 res://scenes/powerup.tscn
-res://scripts/ball.gd
+res://scenes/main.tscn
+res://scenes/brick_particles.tscn
+res://scenes/paddle.tscn
 res://scripts/main.gd
-res://scripts/paddle.gd
+res://scripts/ball.gd

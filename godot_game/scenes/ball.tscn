@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://cpbs6y4gvd8vx" path="res://assets/pixmaps/ball.png" id="2_fghij"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_bouncy"]
-friction = 0.0
+friction = 0.25
 bounce = 1.0
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_12345"]

@@ -2,8 +2,8 @@ extends RigidBody2D
 
 enum BallState { ON_PADDLE, MOVING }
 
-const MIN_SPEED = 200
-const MAX_SPEED = 400
+const MIN_SPEED = 300
+const MAX_SPEED = 500
 
 var state: BallState = BallState.ON_PADDLE
 var is_bomb: bool = false
@@ -31,7 +31,7 @@ func _on_body_entered(body):
 
 func _physics_process(delta):
 	if state == BallState.ON_PADDLE:
-		position = paddle.position + Vector2(0, -25)
+		position = paddle.position + Vector2(0, -16)
 	elif state == BallState.MOVING:
 		# Clamp speed
 		if linear_velocity.length() > MAX_SPEED:
@@ -43,7 +43,7 @@ func launch():
 	if state == BallState.ON_PADDLE:
 		freeze = false
 		state = BallState.MOVING
-		var launch_direction = Vector2(randf_range(-1, 1), -1).normalized()
+		var launch_direction = Vector2(randf_range(-1, 1), -1.25).normalized()
 		linear_velocity = launch_direction * MIN_SPEED
 		# Apply a bit of angular impulse to make it more interesting
 		apply_central_impulse(launch_direction * 10)
@@ -64,7 +64,7 @@ func reset_ball():
 	set_as_bomb(false)
 
 func explode(hit_brick):
-	var explosion_radius = 100
+	var explosion_radius = 64
 	var bricks_in_radius = []
 	for brick in get_tree().get_nodes_in_group("bricks"):
 		if brick.global_position.distance_to(hit_brick.global_position) < explosion_radius:
