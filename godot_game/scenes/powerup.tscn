@@ -1,12 +1,13 @@
 [gd_scene load_steps=4 format=3 uid="uid://d1e2f3g4h5i6"]
 
-[ext_resource type="Script" path="res://scripts/powerup.gd" id="1_abcde"]
-[ext_resource type="Texture2D" uid="uid://j1k2l3m4n5o6" path="res://assets/pixmaps/bonus_ball.png" id="2_fghij"]
+[ext_resource type="Script" uid="uid://1llmmbrjafpp" path="res://scripts/powerup.gd" id="1_abcde"]
+[ext_resource type="Texture2D" uid="uid://c6ym0y528gaud" path="res://assets/pixmaps/bonus_ball.png" id="2_fghij"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_12345"]
 size = Vector2(24, 12)
 
 [node name="PowerUp" type="Area2D"]
+collision_mask = 4
 script = ExtResource("1_abcde")
 
 [node name="Sprite" type="Sprite2D" parent="."]

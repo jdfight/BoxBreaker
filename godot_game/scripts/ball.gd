@@ -17,13 +17,17 @@ var paddle = null
 func _ready():
 	# Find the paddle in the scene tree. This is a simple way, but for
 	# larger scenes, signals or groups would be better.
+	add_to_group("balls")
 	paddle = get_parent().get_node("Paddle")
 	connect("body_entered", _on_body_entered)
 	freeze = true
 
 func _on_body_entered(body):
 	if body.is_in_group("bricks"):
-		body.take_damage()
+		if is_bomb:
+			explode(body)
+		else:
+			body.take_damage()
 
 func _physics_process(delta):
 	if state == BallState.ON_PADDLE:
@@ -57,4 +61,16 @@ func reset_ball():
 	freeze = true
 	linear_velocity = Vector2.ZERO
 	angular_velocity = 0
+	set_as_bomb(false)
+
+func explode(hit_brick):
+	var explosion_radius = 100
+	var bricks_in_radius = []
+	for brick in get_tree().get_nodes_in_group("bricks"):
+		if brick.global_position.distance_to(hit_brick.global_position) < explosion_radius:
+			bricks_in_radius.append(brick)
+
+	for brick in bricks_in_radius:
+		brick.destroy_brick()
+
 	set_as_bomb(false)

@@ -1,12 +1,12 @@
-[gd_scene load_steps=9 format=3 uid="uid://b5w5d0f6vj0w"]
+[gd_scene load_steps=11 format=3 uid="uid://b5w5d0f6vj0w"]
 
-[ext_resource type="Script" path="res://scripts/main.gd" id="1_f8fgr"]
-[ext_resource type="Texture2D" uid="uid://c6lqj0vhtgqj" path="res://assets/pixmaps/bgTitle.png" id="2_wcvc5"]
-[ext_resource type="Texture2D" uid="uid://c1vry4h2kihx" path="res://assets/pixmaps/btn_newGame.png" id="3_g7wsc"]
-[ext_resource type="Texture2D" uid="uid://blg0h01h1vtm" path="res://assets/pixmaps/btn_continue.png" id="4_58h1v"]
-[ext_resource type="Texture2D" uid="uid://bpgbl58qg52su" path="res://assets/pixmaps/bg1.png" id="5_q82j1"]
+[ext_resource type="Script" uid="uid://v5ekiumpbiw6" path="res://scripts/main.gd" id="1_f8fgr"]
+[ext_resource type="Texture2D" uid="uid://dgbsh8hcuv5x7" path="res://assets/pixmaps/bgTitle.png" id="2_wcvc5"]
+[ext_resource type="Texture2D" uid="uid://ci5bsb6306wef" path="res://assets/pixmaps/btn_newGame.png" id="3_g7wsc"]
+[ext_resource type="Texture2D" uid="uid://4jiwsr6hn8l1" path="res://assets/pixmaps/btn_continue.png" id="4_58h1v"]
+[ext_resource type="Texture2D" uid="uid://bv0cc3ebkx18e" path="res://assets/pixmaps/bg1.png" id="5_q82j1"]
 [ext_resource type="PackedScene" uid="uid://bixyqf2w5y5w" path="res://scenes/paddle.tscn" id="6_abcde"]
-[ext_resource type="PackedScene" uid="uid://d0c8bsg7n8h7e" path="res://scenes/brick.tscn" id="7_fghij"]
+[ext_resource type="Texture2D" uid="uid://vbfjb5iyc8t" path="res://assets/pixmaps/bgGameOver.png" id="8_abcde"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wall"]
 size = Vector2(660, 20)
@@ -28,7 +28,6 @@ centered = false
 position = Vector2(320, 450)
 
 [node name="Walls" type="StaticBody2D" parent="."]
-collision_layer = 1
 
 [node name="Top" type="CollisionShape2D" parent="Walls"]
 position = Vector2(320, -10)
@@ -44,9 +43,15 @@ shape = SubResource("RectangleShape2D_wall2")
 
 [node name="FloorSensor" type="Area2D" parent="."]
 position = Vector2(320, 490)
+collision_layer = 2
+collision_mask = 2
 
 [node name="CollisionShape" type="CollisionShape2D" parent="FloorSensor"]
 shape = SubResource("RectangleShape2D_floor")
+
+[node name="LevelCompleteTimer" type="Timer" parent="."]
+wait_time = 0.1
+one_shot = true
 
 [node name="UI" type="CanvasLayer" parent="."]
 
@@ -98,13 +103,13 @@ grow_vertical = 2
 texture_normal = ExtResource("4_58h1v")
 
 [node name="HUD" type="Control" parent="UI"]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-visible = false
 
 [node name="ScoreLabel" type="Label" parent="UI/HUD"]
 layout_mode = 0
@@ -141,22 +146,22 @@ text = "Ammo: 0"
 horizontal_alignment = 1
 
 [node name="GameOverScreen" type="Control" parent="UI"]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-visible = false
 
-[node name="ColorRect" type="ColorRect" parent="UI/GameOverScreen"]
+[node name="TextureRect" type="TextureRect" parent="UI/GameOverScreen"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.5)
+texture = ExtResource("8_abcde")
 
 [node name="Label" type="Label" parent="UI/GameOverScreen"]
 layout_mode = 1
@@ -177,13 +182,13 @@ horizontal_alignment = 1
 vertical_alignment = 1
 
 [node name="GameWonScreen" type="Control" parent="UI"]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-visible = false
 
 [node name="ColorRect" type="ColorRect" parent="UI/GameWonScreen"]
 layout_mode = 1
@@ -212,6 +217,6 @@ Click to continue"
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[connection signal="body_entered" from="FloorSensor" to="." method="_on_floor_sensor_body_entered"]
 [connection signal="pressed" from="UI/StartMenu/NewGameButton" to="." method="_on_new_game_button_pressed"]
 [connection signal="pressed" from="UI/StartMenu/ContinueButton" to="." method="_on_continue_button_pressed"]
-[connection signal="body_entered" from="FloorSensor" to="." method="_on_floor_sensor_body_entered"]

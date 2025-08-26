@@ -8,31 +8,30 @@
 
 config_version=5
 
-[layer_names]
-
-2d_physics/layer_1="Walls"
-2d_physics/layer_2="Ball"
-2d_physics/layer_3="Paddle"
-2d_physics/layer_4="Bricks"
-
 [application]
 
 config/name="Box Breaker"
 run/main_scene="res://scenes/main.tscn"
-config/features=PackedStringArray("4.2", "Forward Plus")
+config/features=PackedStringArray("4.4", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+MapLoader="*res://scripts/map_loader.gd"
+AudioManager="*res://scripts/audio_manager.gd"
 
 [display]
 
 window/size/viewport_width=640
 window/size/viewport_height=480
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
 
-[autoload]
+[layer_names]
 
-MapLoader="*res://scripts/map_loader.gd"
-AudioManager="*res://scripts/audio_manager.gd"
+2d_physics/layer_1="Walls"
+2d_physics/layer_2="Ball"
+2d_physics/layer_3="Paddle"
+2d_physics/layer_4="Bricks"
 
 [rendering]
 

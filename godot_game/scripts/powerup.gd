@@ -22,6 +22,7 @@ func _physics_process(delta):
 
 func set_type(new_type: String):
 	type = new_type
+	add_to_group("powerups")
 	if POWERUP_TEXTURES.has(type):
 		$Sprite.texture = POWERUP_TEXTURES[type]
 	else:

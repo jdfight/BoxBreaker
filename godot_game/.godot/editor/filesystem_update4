@@ -1,0 +1,6 @@
+res://scenes/main.tscn
+res://scenes/ball.tscn
+res://scenes/powerup.tscn
+res://scripts/ball.gd
+res://scripts/main.gd
+res://scripts/paddle.gd

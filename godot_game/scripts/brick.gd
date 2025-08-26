@@ -63,6 +63,7 @@ func destroy_brick():
 		get_parent().add_child(new_powerup)
 		new_powerup.position = global_position
 		new_powerup.set_type(chosen_type)
+		new_powerup.connect("powerup_collected", get_tree().root.get_node("Main")._on_powerup_collected)
 
 	var particles = BrickParticles.instantiate()
 	particles.position = global_position

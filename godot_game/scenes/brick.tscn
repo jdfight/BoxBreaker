@@ -1,13 +1,13 @@
 [gd_scene load_steps=4 format=3 uid="uid://d0c8bsg7n8h7e"]
 
-[ext_resource type="Script" path="res://scripts/brick.gd" id="1_abcde"]
-[ext_resource type="Texture2D" uid="uid://b8w8g8h8i8j8" path="res://assets/pixmaps/brick.png" id="2_fghij"]
+[ext_resource type="Script" uid="uid://i1wf4eprgxux" path="res://scripts/brick.gd" id="1_abcde"]
+[ext_resource type="Texture2D" uid="uid://clf8xqc6bshax" path="res://assets/pixmaps/brick.png" id="2_fghij"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_12345"]
 size = Vector2(32, 16)
 
 [node name="Brick" type="StaticBody2D"]
-collision_layer = 8
+collision_layer = 16
 script = ExtResource("1_abcde")
 
 [node name="Sprite" type="Sprite2D" parent="."]

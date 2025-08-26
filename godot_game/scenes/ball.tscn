@@ -1,25 +1,24 @@
-[gd_scene load_steps=4 format=3 uid="uid://cjw7q3w8xqyv"]
+[gd_scene load_steps=5 format=3 uid="uid://cjw7q3w8xqyv"]
 
-[ext_resource type="Script" path="res://scripts/ball.gd" id="1_abcde"]
-[ext_resource type="Texture2D" uid="uid://dkh2h2j2h2j2" path="res://assets/pixmaps/ball.png" id="2_fghij"]
-
-[sub_resource type="CircleShape2D" id="CircleShape2D_12345"]
-radius = 8.0
+[ext_resource type="Script" uid="uid://c7qx5v7nt4spx" path="res://scripts/ball.gd" id="1_abcde"]
+[ext_resource type="Texture2D" uid="uid://cpbs6y4gvd8vx" path="res://assets/pixmaps/ball.png" id="2_fghij"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_bouncy"]
 friction = 0.0
 bounce = 1.0
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_12345"]
+radius = 8.0
+
 [node name="Ball" type="RigidBody2D"]
-script = ExtResource("1_abcde")
 collision_layer = 2
-collision_mask = 13
-gravity_scale = 0.0
-linear_damp = 0.0
-continuous_cd = 2 # Continuous collision detection for fast-moving object
+collision_mask = 29
 physics_material_override = SubResource("PhysicsMaterial_bouncy")
+gravity_scale = 0.1
+continuous_cd = 2
 contact_monitor = true
 max_contacts_reported = 4
+script = ExtResource("1_abcde")
 
 [node name="Sprite" type="Sprite2D" parent="."]
 texture = ExtResource("2_fghij")

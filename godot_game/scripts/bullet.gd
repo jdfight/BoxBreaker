@@ -8,6 +8,7 @@ func _physics_process(delta):
 		queue_free()
 
 func _on_body_entered(body):
+	print("Bullet collided with: ", body.name)
 	if body.is_in_group("bricks"):
 		body.take_damage()
 		queue_free()

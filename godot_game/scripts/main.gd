@@ -31,12 +31,12 @@ var balls = []
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	update_ui()
-	get_tree().root.connect("child_entered_tree", _on_child_entered_tree)
 	$UI/StartMenu/ContinueButton.visible = FileAccess.file_exists(SAVE_PATH)
+	$LevelCompleteTimer.connect("timeout", self._check_level_complete)
 
-func _on_child_entered_tree(node):
-	if node is Area2D and node.has_signal("powerup_collected"):
-		node.connect("powerup_collected", _on_powerup_collected)
+	
+
+
 
 func _input(event):
 	if game_state == GameState.PLAYING and event is InputEventMouseButton and event.pressed:
@@ -45,6 +45,9 @@ func _input(event):
 				ball.launch()
 		elif event.button_index == MOUSE_BUTTON_RIGHT:
 			shoot()
+	elif game_state == GameState.GAME_OVER and event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_LEFT:
+			change_state(GameState.START_MENU)
 
 func shoot():
 	if ammo > 0:
@@ -57,8 +60,7 @@ func shoot():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta):
-	if (game_state == GameState.GAME_OVER or game_state == GameState.GAME_WON) and Input.is_action_just_pressed("ui_accept"):
-		change_state(GameState.START_MENU)
+	pass
 
 func change_state(new_state: GameState):
 	game_state = new_state
@@ -91,6 +93,7 @@ func update_ui():
 	score_label.text = "Score: %d" % score
 	lives_label.text = "Lives: %d" % lives
 	ammo_label.text = "Ammo: %d" % ammo
+	ammo_label.visible = ammo > 0
 
 func _on_new_game_button_pressed():
 	print("New Game button pressed")
@@ -104,7 +107,7 @@ func start_game(new_game: bool):
 	if new_game:
 		score = 0
 		lives = 5
-		ammo = 0
+		ammo = 20
 		current_level = 0
 	else:
 		current_level = load_progress()
@@ -117,7 +120,10 @@ func start_game(new_game: bool):
 		ball.queue_free()
 	balls.clear()
 
+	$FloorSensor.monitoring = true
+
 	create_new_ball()
+	balls[0].set_as_bomb(true)
 
 	_load_level(current_level)
 
@@ -149,20 +155,22 @@ func _load_level(level_num):
 				new_brick.connect("brick_destroyed", _on_brick_destroyed)
 
 
-func create_new_ball():
+func create_new_ball(launch_now = false):
 	var new_ball = Ball.instantiate()
 	add_child(new_ball)
-	# Explicitly set position relative to the paddle on creation
+	new_ball.reset_ball()
 	if is_instance_valid($Paddle):
 		new_ball.position = $Paddle.position + Vector2(0, -25)
 	balls.append(new_ball)
+	if launch_now:
+		new_ball.launch()
 
 func _on_brick_destroyed(brick):
 	score += 100
 	update_ui()
 
-	# Use call_deferred to wait for the brick to be removed from the tree
-	call_deferred("_check_level_complete")
+	# Use a timer to wait for the brick to be removed from the tree
+	$LevelCompleteTimer.start()
 
 func _check_level_complete():
 	if get_tree().get_nodes_in_group("bricks").is_empty():
@@ -179,9 +187,10 @@ func _check_level_complete():
 
 func _on_powerup_collected(type):
 	AudioManager.play_sound("sfx-06")
+	score += 200
 	match type:
 		"ball":
-			create_new_ball()
+			create_new_ball(true)
 		"bomb":
 			for ball in balls:
 				ball.set_as_bomb(true)
@@ -191,7 +200,7 @@ func _on_powerup_collected(type):
 			ammo = 20
 		"ballMulti":
 			for i in range(4):
-				create_new_ball()
+				create_new_ball(true)
 		"life":
 			lives += 1
 		"grow":
@@ -200,9 +209,10 @@ func _on_powerup_collected(type):
 	update_ui()
 
 func _on_floor_sensor_body_entered(body):
+	print("Floor sensor entered by: ", body.name)
 	if body is RigidBody2D: # It's a ball
-		body.queue_free()
 		balls.erase(body)
+		body.queue_free()
 
 		if balls.is_empty():
 			lives -= 1
@@ -211,7 +221,7 @@ func _on_floor_sensor_body_entered(body):
 			if lives <= 0:
 				change_state(GameState.GAME_OVER)
 			else:
-				create_new_ball()
+				call_deferred("create_new_ball")
 
 func save_progress(level):
 	var file = FileAccess.open(SAVE_PATH, FileAccess.WRITE)

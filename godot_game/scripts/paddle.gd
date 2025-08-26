@@ -27,3 +27,7 @@ func resize_paddle(new_width: float):
 
 	var new_shape_size = Vector2(new_width, collision_shape.shape.size.y)
 	collision_shape.shape.size = new_shape_size
+
+func reset_paddle():
+	var screen_width = get_viewport_rect().size.x
+	position.x = screen_width / 2
